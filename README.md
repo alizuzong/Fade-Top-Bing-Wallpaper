@@ -16,6 +16,7 @@
 2. 下载安装FadeTop
 3. 执行程序时, 会生成config.txt用于配置, 其第一行应为Fade Top安装目录, 第二行为显示的格言内容
 
+### 下载
 本软件百度云: 链接：https://pan.baidu.com/s/1cwVsahWh570C1oqSEIpmhg  提取码: 2h5f
 
 FadeTop百度云:链接：https://pan.baidu.com/s/14PZHlRn2DnsF8dekZE_sJA 提取码：3tla 
@@ -23,3 +24,10 @@ FadeTop百度云:链接：https://pan.baidu.com/s/14PZHlRn2DnsF8dekZE_sJA 提取
 本软件源码:https://github.com/dhgdhg/Fade-Top-Bing-Wallpaper
 
 (可选)Dynamic Theme下载链接: https://www.microsoft.com/en-us/p/dynamic-theme/9nblggh1zbkw?activetab=pivot:overviewtab
+
+### config.txt示例
+
+```
+E:\Program Files (x86)\FadeTop
+长时间的静态行为独立地影响着各种疾病和死亡的风险, 锻炼并不能完全抵消其危害.
+```
