@@ -15,8 +15,7 @@
 0. 安装python
 1. 下载安装FadeTop
 2. 执行程序时, 会生成config.txt用于配置, 其第一行应为Fade Top安装目录, 第二行为显示的格言内容
-3. 可以新建run.sh, 然后放到StartUp文件夹
-  - `XXX/python.exe fade_top_bing_waller.py`
+3. 可以新建run.sh, 然后放到StartUp文件夹开机自启, 文件内容: `XXX/python.exe fade_top_bing_waller.py`
 
 
 ### 下载
