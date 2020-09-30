@@ -3,8 +3,8 @@ import datetime
 import re
 import os
 import time
-from multiprocessing import Process
 import ssl
+ROOT_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
 try:
     from urllib.request import Request
@@ -24,7 +24,6 @@ def urlopen(req):
 def urlretrieve(url, path):
     try:
         from urllib.request import urlretrieve as f
-        print(3)
         return f(url, path)
     except:
         with open(path, 'wb') as f:
@@ -39,37 +38,44 @@ headers = {
 
 
 def get_config():
-    config_file_path = os.path.join(os.path.split(
-        os.path.realpath(__file__))[0], 'config.txt')
-    exe_dir, motto, other = r'C:\Program Files (x86)\FadeTop', '请在config.txt文件中配置', '第一行为FadeTop.exe所在目录, 第二行为格言内容, FadeTop所在目录示例:C:\Program Files (x86)\FadeTop'
+    config_file_path = os.path.join(ROOT_DIR, 'config.txt')
+    motto = '请在config.txt文件中配置'
     if os.path.exists(config_file_path):
         with open(config_file_path, 'r') as m:
-            exe_dir, motto = m.read().split('\n')[:2]
-        if not os.path.exists(os.path.join(exe_dir, 'FadeTop.exe')):
-            motto = 'config.txt文件中, FadeTop所在目录有错'
-            exe_dir = ''
+            motto = m.read()
     else:
-        if os.path.exists(os.path.join(exe_dir, 'FadeTop.exe')):
-            exe_dir = 'C:\Program Files (x86)\FadeTop'
-        else:
-            exe_dir = ''
         with open(config_file_path, 'w') as m:
-            m.write(exe_dir + '\n' + motto + '\n' + other)
-    return exe_dir, motto
+            m.write(motto)
+    return motto
 
 
 def change_wallpaper(motto, image_path):
-    setting_xml_path = os.path.join(
-        os.environ['USERPROFILE'], 'AppData\\Local\\FadeTop\\Settings.xml')
-
+    setting_xml_path = os.path.join(ROOT_DIR, 'FadeTop', 'Settings.xml')
+    setting_xml_str = r'''
+<?xml version="1.0" encoding="UTF-8" ?>
+<FadeTopSettings version="3.0" xmlns="http://www.fadetop.com/fadetop/xmlns/settings">
+    <States>
+        <Application debut="0" auto_fade_enabled="1" />
+        <User break_trail="0:0" />
+    </States>
+    <Options>
+        <General activity_timeout="15" idle_timeout="5" fade_again_delay="1" auto_block_enabled="1" />
+        <Fader max_opacity="100">
+            <Foreground fg_color="#FFFFFF" fg_position="center" fg_offset_x="0" fg_offset_y="0" fg_time_format="auto" fg_message="请在config.txt文件中配置" />
+            <Background bg_color="#008040" bg_image_enabled="1" bg_random_image_enabled="0" bg_image_file="" bg_image_position="fill" />
+        </Fader>
+        <Sound sound_enabled="0" sound_file="" sound_fadein_enabled="0" sound_fadeout_enabled="1" sound_volume_default="50" />
+    </Options>
+</FadeTopSettings>
+    '''
     if not os.path.exists(setting_xml_path):
-        return
-    with open(setting_xml_path, 'r+') as f:
-        setting_xml_str = f.read()
+        with open(setting_xml_path, 'wb') as f:
+            f.write(setting_xml_str.encode('utf8'))    
+
+    with open(setting_xml_path, 'rb') as f:
+        setting_xml_str = f.read().decode('utf8')
         if not setting_xml_str:
             return
-        f.seek(0)
-        f.truncate()
         setting_xml_str = setting_xml_str.replace(
             re.search('(bg_image_file=".*?")', setting_xml_str).group(),
             'bg_image_file="{}"'.format(image_path)
@@ -82,15 +88,16 @@ def change_wallpaper(motto, image_path):
             '<Foreground fg_color="#FFFFFF" fg_position="center" fg_offset_x="0" fg_offset_y="0" fg_time_format="auto" fg_message="{}" />'.format(
                 motto)
         )
-        f.write(setting_xml_str)
+    with open(setting_xml_path, 'wb') as f:
+        f.write(setting_xml_str.encode('utf8'))
 
 
 def kill_FadeTop():
     os.system('taskkill /F /im FadeTop.exe')
 
 
-def start_FadeTop(exe_dir):
-    os.system('"{}"'.format(os.path.join(exe_dir, 'FadeTop.exe')))
+def start_FadeTop():
+    os.system('"{}"'.format(os.path.join(ROOT_DIR, 'FadeTop','FadeTop.exe')))
 
 
 def get_bing_image():
@@ -106,15 +113,14 @@ def get_bing_image():
                            str(content),
                            re.S
                            ).groups()[0]
-    image_path = os.path.join(os.path.split(os.path.realpath(__file__))[
-                              0], 'fadetop_wallpaper.jpg')
+    image_path = os.path.join(ROOT_DIR, 'FadeTopBing', 'fadetop_wallpaper.jpg')
     urlretrieve(url+'/th?id='+image_name, image_path)
     return image_path
 
 
 def get_dynamic_bing_image():
     tmp_path = os.path.join(
-        os.environ['USERPROFILE'], 'AppData\\Local\\Packages\\')
+        os.environ['USERPROFILE'], 'AppData', 'Local', 'Packages')
     dy_path = [i for i in os.listdir(tmp_path) if 'DynamicTheme' in i]
     if not dy_path:
         return
@@ -122,7 +128,7 @@ def get_dynamic_bing_image():
     dynamic_theme_path = os.path.join(
         tmp_path,
         dy_path,
-        'LocalState\\Bing'
+        'LocalState', 'Bing'
     )
     if not os.path.isdir(dynamic_theme_path):
         return None
@@ -131,31 +137,11 @@ def get_dynamic_bing_image():
 
 
 def run():
-    if os.path.exists('f_id'):
-        with open('f_pid', 'r') as f:
-            pid = f.read()
-            if pid:
-                os.system("taskkill /pid {} /f".format(pid))
-
-    with open('f_pid', 'w') as f:
-        f.write(str(os.getpid()))
-    exe_dir, motto = get_config()
+    motto = get_config()
     kill_FadeTop()
     change_wallpaper(motto, get_bing_image())
-    if exe_dir:
-        start_FadeTop(exe_dir)
-    else:
-        raise Exception('Place set FadeTop dir in config.txt on 1th line.')
-
-
-def main():
-    run()
-    while True:
-        if datetime.datetime.now().hour == 18:
-            run()
-        time.sleep(3600)
-
+    start_FadeTop()
+    
 
 if __name__ == "__main__":
-    Process(target=main).start()
-    os.system("taskkill /pid {} /f".format(os.getpid()))
+    run()
